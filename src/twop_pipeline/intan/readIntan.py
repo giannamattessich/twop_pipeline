@@ -1,6 +1,5 @@
 import os, numpy as np, traceback
-import intan.importrhdutilities as rhd_utils
-import matplotlib.pyplot as plt
+import twop_pipeline.intan.importrhdutilities as rhd_utils
 
 # return name of intan analog recording file and intan header file
 def get_intan_files(intan_basepath):

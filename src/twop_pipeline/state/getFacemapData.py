@@ -4,10 +4,10 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter1d
 import matplotlib.pyplot as plt
 import traceback
-from utils.filtering import *
-from state import extractStates
-from utils.getFPS import *
-from utils import stats
+from twop_pipeline.utils.filtering import *
+from twop_pipeline.state import extractStates
+from twop_pipeline.utils.getFPS import *
+from twop_pipeline.utils import stats
 
 # '''  ***** MAIN METHOD TO SAVE STATE VARIABLE DATAFRAME FOR EASY USE LATER*****  '''
 

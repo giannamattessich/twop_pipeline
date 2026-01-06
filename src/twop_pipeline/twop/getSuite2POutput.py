@@ -1,10 +1,9 @@
 import os, traceback, numpy as np, pandas as pd, matplotlib.pyplot as plt
-import suite2p
 from sklearn.preprocessing import MinMaxScaler
-from scipy.ndimage import gaussian_filter, median_filter
-from utils.stats import movquant
+from scipy.ndimage import median_filter
+from twop_pipeline.utils.stats import movquant
 import matplotlib.ticker as ticker
-from utils.getDataFiles import get2p_foldername_field
+from twop_pipeline.utils.getDataFiles import get2p_foldername_field
 
 class Suite2POutput:
     """
@@ -42,7 +41,7 @@ class Suite2POutput:
                 print(f"WARNING!!!! Experiment.xml file ({experiment_metadata_file}) not found. This will cause incorrect or failed downstream analyses.")
                 self.scope_fs = scope_fs
             else:
-                from utils.getFPS import get_fps_from_xml
+                from twop_pipeline.utils.getFPS import get_fps_from_xml
                 scope_fps = get_fps_from_xml(experiment_metadata_file)
                 print(f'Found scope fps from Experiment.xml file: {scope_fps}')
                 self.scope_fs = scope_fps

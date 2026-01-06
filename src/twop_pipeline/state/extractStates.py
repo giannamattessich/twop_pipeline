@@ -2,7 +2,7 @@ import traceback, numpy as np, pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import spearmanr, pearsonr
 from statsmodels.stats.multitest import multipletests
-from utils.stats import zscore_robust
+from twop_pipeline.utils.stats import zscore_robust
 
 '''GET STATE FROM MOTION AND LOCOMOTION BOOLEAN VALUES'''
 def annotate_state(state_df_row):

@@ -1,5 +1,5 @@
 import numpy as np, os
-from utils.filtering import *
+from twop_pipeline.utils.filtering import *
 import matplotlib.pyplot as plt
 
 def load_buzcode_emg_fromlfp(mat_path):

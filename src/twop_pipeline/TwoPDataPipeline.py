@@ -1,9 +1,9 @@
 import traceback
-from utils.getDataFiles import *
-from utils.alignmentFunctions import get_analog_times, align_scope_triggers_to_frames, motion_to_2p_bins, categorical_to_2p
-from intan.readIntan import *
-from twop.getSuite2POutput import *
-from state.getFacemapData import *
+from twop_pipeline.utils.getDataFiles import *
+from twop_pipeline.utils.alignmentFunctions import get_analog_times, align_scope_triggers_to_frames, motion_to_2p_bins, categorical_to_2p
+from twop_pipeline.intan.readIntan import *
+from twop_pipeline.twop.getSuite2POutput import *
+from twop_pipeline.state.getFacemapData import *
 
 class TwoPData:
     # PROVIDE ANALOG CHANNELS AS NUM ADC CHANNEL (0-8), NOT ANALOG/AUX TOTAL

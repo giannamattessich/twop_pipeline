@@ -1,8 +1,8 @@
 import numpy as np, matplotlib.pyplot as plt
 import os, traceback
-from utils.alignmentFunctions import restrict_traces
-from utils.stats import zscore_robust
-from twop.plots import *
+from twop_pipeline.utils.alignmentFunctions import restrict_traces
+from twop_pipeline.utils.stats import zscore_robust
+from twop_pipeline.twop.plots import *
 import matplotlib.ticker as mticker
 from matplotlib.colors import Normalize
 

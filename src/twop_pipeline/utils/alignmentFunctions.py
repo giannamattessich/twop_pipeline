@@ -1,7 +1,5 @@
-import numpy as np, matplotlib.pyplot as plt, os, pandas as pd
-from scipy.signal import butter, filtfilt
-import intan.importrhdutilities as rhd_utils
-from utils.filtering import *
+import numpy as np, matplotlib.pyplot as plt, pandas as pd
+from twop_pipeline.utils.filtering import *
 
 ### SOURCE: EHSAN + GABRIEL
 def detectTransitions(analogSignal, earliestSample=0, histBinNumber=4, upTransition=False,\

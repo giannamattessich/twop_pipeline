@@ -1,6 +1,6 @@
 import numpy as np
-from lfp.readLFP import *
-from lfp.lfpFunctions import *
+from twop_pipeline.lfp.readLFP import *
+from twop_pipeline.lfp.lfpFunctions import *
 from scipy.ndimage import gaussian_filter
 
 def plot_LFP_spectrogram(to, fo, spec, axs, cmap="magma", t_start=None, t_end=None, f_max=None):
@@ -34,98 +34,6 @@ def plot_LFP_spectrogram(to, fo, spec, axs, cmap="magma", t_start=None, t_end=No
     axs.set_xlabel("Time (s)")
     axs.set_ylabel("Freq (Hz)")
     return im
-
-# def plot_LFP_spectrogram(
-#     to, fo, spec,
-#     time_sigma=2,
-#     freq_sigma=1,
-#     vmin=-2, vmax=2,
-#     axs=None,
-#     t_start=None,
-#     t_end=None,
-#     cmap = 'jet_r',
-#     colorbar=True
-# ):
-#     """
-#     Plot a gaussian smoothed spectrogram.
-
-#     Parameters
-#     ----------
-#     to : 1D array
-#         Time vector (seconds), length T.
-#     fo : 1D array
-#         Frequency vector (Hz), length F.
-#     spec : 2D array
-#         Spectrogram. Shape may be (T, F) or (F, T).
-#     t_start, t_end : float or None
-#         Optional time limits for plotting (seconds).
-#     """
-
-#     to = np.asarray(to)
-#     fo = np.asarray(fo)
-#     spec = np.asarray(spec)
-
-#     # ----- Optional time cropping -----
-#     if t_start is not None or t_end is not None:
-#         if t_start is None:
-#             t_start = to[0]
-#         if t_end is None:
-#             t_end = to[-1]
-
-#         mask = (to >= t_start) & (to <= t_end)
-
-#         # keep original time length to match spectrogram axis
-#         to_full = to
-#         to = to_full[mask]
-
-#         # Detect which axis of spec is time and crop that axis
-#         if spec.shape[0] == to_full.size:
-#             # time along axis 0: (T, F)
-#             spec = spec[mask, :]
-#         elif spec.shape[1] == to_full.size:
-#             # time along axis 1: (F, T)
-#             spec = spec[:, mask]
-#         else:
-#             raise ValueError(
-#                 f"Time vector length {to_full.size} does not match "
-#                 f"any axis of spec {spec.shape}"
-#             )
-
-#     # ----- Log power -----
-#     spec_log = spec
-
-#     # ensure (T, F) for smoothing
-#     if spec_log.shape[0] == to.size:
-#         spec_tf = spec_log
-#     elif spec_log.shape[1] == to.size:
-#         spec_tf = spec_log.T
-#     else:
-#         raise ValueError("Spec shape mismatch")
-
-#     # smooth
-#     spec_smooth = gaussian_filter(spec_tf, sigma=(time_sigma, freq_sigma))
-
-#     # plot as (freq, time)
-#     img_data = spec_smooth.T
-
-#     im = axs.imshow(
-#         img_data,
-#         aspect="auto",
-#         origin="lower",
-#         extent=[to[0], to[-1], fo[0], fo[-1]],
-#         vmin=np.nanpercentile(spec_smooth, 5),
-#         vmax=np.nanpercentile(spec_smooth, 95),
-#         cmap=cmap,
-#     )
-#     plt.ylabel("Freq (Hz)")
-#     plt.xlabel("Time (s)")
-#     plt.ylim(0, 80)
-#     plt.yticks([0, 5, 10, 15, 20])
-#     if colorbar:
-#         plt.colorbar(im, label="Power (log)")
-#     plt.tight_layout()
-#     plt.show()
-#     return axs, im
 
 def compare_days_spectrograms(day2lfp, fs_lfp, chan_reduce="median",
                               nperseg=2048, noverlap=1536, fmax=200, show=True):

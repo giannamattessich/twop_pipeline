@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "twop_pipeline"
+version = "0.1.0"
+description = "Two-photon data pipeline utilities"
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+  "suite2p",
+  "facemap",
+  "scipy",
+  "pandas",
+  "statsmodels",
+  "joblib",
+  "pyarrow",
+]
+
+[project.optional-dependencies]
+ml = ["scikit-learn"]
+gpu = ["cupy-cuda12x; platform_system=='Linux'"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

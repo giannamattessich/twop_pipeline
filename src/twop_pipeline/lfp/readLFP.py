@@ -1,8 +1,8 @@
 import os,traceback, numpy as np
-from intan.importrhdutilities import read_header
-from utils.filtering import *
+from twop_pipeline.intan.importrhdutilities import read_header
+from twop_pipeline.utils.filtering import *
 import pandas as pd
-from intan.readIntan import get_intan_files 
+from twop_pipeline.intan.readIntan import get_intan_files 
 from scipy.signal import coherence
 from scipy.signal import spectrogram
 

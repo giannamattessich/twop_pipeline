@@ -1,7 +1,7 @@
 import os, numpy as np, traceback
 import matplotlib.pyplot as plt
 from scipy.signal import spectrogram
-from lfp.readLFP import *
+from twop_pipeline.lfp.readLFP import *
 
 
 def channel_reduce(arr, method="median"):

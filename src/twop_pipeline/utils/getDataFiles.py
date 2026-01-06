@@ -1,7 +1,7 @@
 import os, traceback, shutil
 import numpy as np
 import pickle, joblib
-from intan.readIntan import get_intan_data
+from twop_pipeline.intan.readIntan import get_intan_data
 
 
 def get_all_intan_data(intan_basepath, twop_chan=2, pd_chan=5, camera_chan=3, treadmill_chan=6,
