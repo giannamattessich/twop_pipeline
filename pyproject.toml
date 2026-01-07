@@ -17,10 +17,12 @@ dependencies = [
   "statsmodels",
   "joblib",
   "pyarrow",
+  "lz4",
 ]
 
 [project.optional-dependencies]
 ml = ["scikit-learn"]
+longitudinal = ["track2p"]
 gpu = ["cupy-cuda12x; platform_system=='Linux'"]
 
 [tool.setuptools]

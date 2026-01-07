@@ -9,7 +9,7 @@ def corr_motion_dff(dff, motion_at_frames):
     valid = ~np.isnan(motion_at_frames)
 
     m = zscore(motion_at_frames[valid])
-
+    dff = dff[:,:-1]
     for i in range(n_cells):
         x = zscore(dff[i, valid])
         r, _ = pearsonr(x, m)
@@ -127,7 +127,7 @@ def compute_auroc_motion_per_cell(dff, motion_at_frames, high_percentile=80, zsc
     auroc_vals : (n_cells,) AUROC for each cell (NaN if cannot compute)
     labels     : (n_frames,) binary motion labels (0/1)
     """
-    dff = np.asarray(dff)
+    dff = np.asarray(dff)[:,:-1]
     motion = np.asarray(motion_at_frames)
     n_cells, n_frames = dff.shape
 
@@ -244,9 +244,10 @@ def plot_sta(tau, sta_mean, sta_sem, z_sta=None, title=None):
     plt.xlabel("Delay (s)")
     plt.ylabel("STA (motion)")
     plt.tight_layout()
-    plt.show()
-    plt.title('Population: spike triggered average by facial motion')
-
+    if title:
+        plt.title(title)
+    else:
+        plt.title('Population: spike triggered average by facial motion')
     if z_sta is not None:
         plt.figure(figsize=(4,3))
         plt.plot(tau, z_sta)
@@ -255,5 +256,59 @@ def plot_sta(tau, sta_mean, sta_sem, z_sta=None, title=None):
         plt.ylabel("STA (z-score vs chance)")
         plt.tight_layout()
         plt.show()
-    if title is not None:
-        plt.title(title)
+    plt.show()
+
+def plot_mta_population(t_win, mta_pop, mta_cells=None, ax=None,
+                        title="Motion-triggered average",
+                        show_sem=True):
+    """
+    Plot population MTA. If mta_cells is provided, overlays SEM across cells.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 4))
+
+    t_win = np.asarray(t_win)
+    mta_pop = np.asarray(mta_pop)
+
+    ax.axvline(0, linestyle="--", linewidth=1)
+    ax.plot(t_win, mta_pop, linewidth=2, label="Population mean")
+
+    if show_sem and (mta_cells is not None) and np.isfinite(mta_cells).any():
+        mta_cells = np.asarray(mta_cells)
+        # SEM across cells at each timepoint
+        n_eff = np.sum(np.isfinite(mta_cells), axis=0)
+        sem = np.nanstd(mta_cells, axis=0) / np.sqrt(np.maximum(n_eff, 1))
+        ax.fill_between(t_win, mta_pop - sem, mta_pop + sem, alpha=0.25, label="SEM (across cells)")
+
+    ax.set_xlabel("Time from motion onset (s)")
+    ax.set_ylabel("ΔF/F (or z-scored)")
+    ax.set_title(title)
+    ax.legend(frameon=False)
+
+def plot_mta_heatmap(t_win, mta_cells, ax=None,
+                     sort_window=(0.0, 1.5),
+                     title="Per-cell motion-triggered average"):
+    """
+    Heatmap of per-cell MTAs, sorted by mean response in sort_window after onset.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 5))
+
+    t_win = np.asarray(t_win)
+    M = np.asarray(mta_cells)  # (cells, time)
+
+    # sort cells by post-onset response
+    w = (t_win >= sort_window[0]) & (t_win <= sort_window[1])
+    score = np.nanmean(M[:, w], axis=1)
+    order = np.argsort(score)[::-1]
+    M_sorted = M[order, :]
+
+    im = ax.imshow(M_sorted, aspect="auto", origin="lower",
+                   extent=[t_win[0], t_win[-1], 0, M_sorted.shape[0]])
+
+    ax.axvline(0, linestyle="--", linewidth=1)
+    ax.set_xlabel("Time from motion onset (s)")
+    ax.set_ylabel("Cells (sorted)")
+    ax.set_title(title)
+    plt.colorbar(im, ax=ax, label="ΔF/F (or z)")
+    return ax

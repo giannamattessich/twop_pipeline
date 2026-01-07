@@ -225,7 +225,7 @@ class Suite2POutput:
         #     spike_df.to_csv(destination_path)
         return spike_df            
 
-    def get_cells_top90(dff, spikes):
+    def get_good_cells(dff, spikes, threshold=90):
         '''
         Filter cells where there is enough variance and in top 90th percentile 
         
@@ -238,7 +238,7 @@ class Suite2POutput:
         spike_counts = spikes.sum(axis=1)
 
         # variance threshold
-        var_thresh = np.percentile(cell_stds, 10)
+        var_thresh = np.percentile(cell_stds, 100-threshold)
         good_var = cell_stds > var_thresh
 
         # spike thresholds (avoid edge cases)
