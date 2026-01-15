@@ -143,4 +143,4 @@ def get_good_cells(dff, spikes):
 
     good_cells = np.where(good_var & good_spike)[0]
     print(f"Good cells: {len(good_cells)} / {n}")
-    return good_cells    
+    return good_cells     

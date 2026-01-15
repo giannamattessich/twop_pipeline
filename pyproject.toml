@@ -23,7 +23,7 @@ dependencies = [
 [project.optional-dependencies]
 ml = ["scikit-learn"]
 longitudinal = ["track2p"]
-gpu = ["cupy-cuda12x; platform_system=='Linux'"]
+gpu = ["cupy>=11.0.0"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

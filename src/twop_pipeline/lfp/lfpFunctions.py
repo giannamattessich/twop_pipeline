@@ -446,6 +446,15 @@ def enforce_min_state_duration(state_sequence, minimum_duration=3):
 
     return cleaned_states
 
+def resample_to_LFP(signal, signal_fs, n_lfp_samples, lfp_fs=1250):
+    t_signal = np.arange(len(signal)) / signal_fs
+    t_lfp    = np.arange(n_lfp_samples) / lfp_fs
+
+    # interpolate signal onto LFP time grid
+    signal_resampled = np.interp(t_lfp, t_signal, signal)
+
+    return t_lfp, signal_resampled
+
 def plv(phi):
     return np.abs(np.mean(np.exp(1j*phi)))
 
