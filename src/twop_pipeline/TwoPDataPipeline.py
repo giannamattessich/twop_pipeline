@@ -4,6 +4,7 @@ from twop_pipeline.utils.alignmentFunctions import get_analog_times, align_scope
 from twop_pipeline.intan.readIntan import *
 from twop_pipeline.twop.getSuite2POutput import *
 from twop_pipeline.state.getFacemapData import *
+from twop_pipeline.TwoPDataPipeline import *
 
 class TwoPData:
     # PROVIDE ANALOG CHANNELS AS NUM ADC CHANNEL (0-8), NOT ANALOG/AUX TOTAL

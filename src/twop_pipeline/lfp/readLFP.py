@@ -229,30 +229,70 @@ def load_lfp_channel(lfp_path, n_channels, chan_idx):
     lfp = data[:, chan_idx].astype(np.float32)
     return lfp
 
-def load_lfp(lfp_source, num_channels=2):
+# def load_lfp(lfp_source, num_channels=2):
+#     if isinstance(lfp_source, str):
+#         if os.path.exists(lfp_source):
+#             try:
+#                 lfp = np.memmap(lfp_source,
+#                         dtype=np.int16, mode='r')
+#                 #if num_channels != 1:
+#                 lfp = lfp.reshape(-1, num_channels).T
+#                 # else:
+#                 #     lfp = lfp.reshape(-1, 1)
+#                 #else:
+#                 return np.array(lfp)
+#             except:
+#                 print(f'Failed to load .lfp file')
+#                 traceback.print_exc()
+#         else:
+#             raise ValueError(f'Provided lfp path does not exist.')
+#     else:
+#         try:
+#             lfp = np.array(lfp_source) 
+#             return lfp  
+#         except:
+#             print('Could not cast LFP source to numpy array.')
+#             traceback.print_exc()
+
+def load_lfp(lfp_source, num_channels=2, trim_incomplete=True):
     if isinstance(lfp_source, str):
-        if os.path.exists(lfp_source):
-            try:
-                lfp = np.memmap(lfp_source,
-                        dtype=np.int16, mode='r')
-                #if num_channels != 1:
-                lfp = lfp.reshape(num_channels, len(lfp) // num_channels)
-                # else:
-                #     lfp = lfp.reshape(-1, 1)
-                #else:
-                return np.array(lfp)
-            except:
-                print(f'Failed to load .lfp file')
-                traceback.print_exc()
-        else:
-            raise ValueError(f'Provided lfp path does not exist.')
+        if not os.path.exists(lfp_source):
+            raise ValueError("Provided lfp path does not exist.")
+
+        try:
+            lfp = np.memmap(lfp_source, dtype=np.int16, mode='r')
+            n = len(lfp)
+
+            if num_channels <= 0:
+                raise ValueError("num_channels must be > 0")
+
+            remainder = n % num_channels
+            if remainder != 0:
+                msg = (
+                    f"LFP length ({n}) is not divisible by num_channels "
+                    f"({num_channels}). Remainder = {remainder}."
+                )
+                if trim_incomplete:
+                    print(msg + " Trimming trailing incomplete samples.")
+                    lfp = lfp[: n - remainder]
+                else:
+                    raise ValueError(msg)
+
+            lfp = lfp.reshape(-1, num_channels).T
+            return np.array(lfp)
+        except Exception:
+            print("Failed to load .lfp file")
+            traceback.print_exc()
+            return None
+
     else:
         try:
-            lfp = np.array(lfp_source) 
-            return lfp  
-        except:
-            print('Could not cast LFP source to numpy array.')
+            lfp = np.array(lfp_source)
+            return lfp
+        except Exception:
+            print("Could not cast LFP source to numpy array.")
             traceback.print_exc()
+            return None
 
 def extract_lfp_allrecs(rec_paths_list: list,
     channels: list,                        # <- indices (0-based) of channels to extract as LFP

@@ -1,3 +1,4 @@
-from .TwoPDataPipeline import TwoPData as TwoPDataPipeline
+# twop_pipeline/__init__.py
 
-__all__ = ["TwoPDataPipeline"]
+# from .TwoPDataPipeline import TwoPDataPipeline
+# from . import twop, intan, utils, state, lfp

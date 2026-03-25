@@ -1,10 +1,10 @@
 import os, traceback, numpy as np, pandas as pd, matplotlib.pyplot as plt
+import suite2p
 from sklearn.preprocessing import MinMaxScaler
-from scipy.ndimage import median_filter
-from twop_pipeline.utils.stats import movquant
+from scipy.ndimage import gaussian_filter, median_filter
+from utils.stats import movquant
 import matplotlib.ticker as ticker
-from twop_pipeline.utils.getDataFiles import get2p_foldername_field
-
+from utils.getDataFiles import get2p_foldername_field
 class Suite2POutput:
     """
     Class to initialize Suite2P output data for a given plane and perform further analyses after 2p ran
@@ -16,7 +16,7 @@ class Suite2POutput:
 
         scope_fs (float; default:1.366): capture rate of 2P scope
     """
-    def __init__(self, suite2p_path, plane='plane0', scope_fs=None): 
+    def __init__(self, suite2p_path, plane='plane0', scope_fs=1.366): 
         self.suite2p_path = suite2p_path
         self.tif_folder = os.path.dirname(suite2p_path)
         # if basepath accidentally provided, try checking if suite2p folder exists within
@@ -38,13 +38,13 @@ class Suite2POutput:
         # check if can find scope fps from experiment meta data file (must be within same 2p folder in 'field_xx'), if not default to provided arg to function
             experiment_metadata_file = os.path.join(os.path.dirname(self.suite2p_path), 'Experiment.xml')
             if not os.path.exists(experiment_metadata_file):
-                print(f"WARNING!!!! Experiment.xml file ({experiment_metadata_file}) not found. This will cause incorrect or failed downstream analyses.")
+                print(f"WARNING!!!! Experiment.xml file ({experiment_metadata_file}) not found and defaulting to scope_fs=30. This will cause incorrect downstream analyses.")
                 self.scope_fs = scope_fs
             else:
-                from twop_pipeline.utils.getFPS import get_fps_from_xml
+                from utils.getFPS import get_fps_from_xml
                 scope_fps = get_fps_from_xml(experiment_metadata_file)
                 print(f'Found scope fps from Experiment.xml file: {scope_fps}')
-                self.scope_fs = scope_fps
+                self.scope_fs = scope_fs
         except:
             traceback.print_exc()
         suite2p_path = plane_path
@@ -58,14 +58,14 @@ class Suite2POutput:
             self.ops_dict = self.ops[()]
             self.spks = np.load(os.path.join(suite2p_path, 'spks.npy'), allow_pickle= True)
             self.stat = np.load(os.path.join(suite2p_path, 'stat.npy'), allow_pickle= True)
-            self.rois, self.nframes = self.F.shape[0], self.F.shape[1] - 1
+            self.rois, self.nframes = self.F.shape
             self.cell_indices = np.where(self.iscell == True)[0]
             self.num_cells = len(self.cell_indices)
         except Exception:
             traceback.print_exc()
 
-    def calc_deltaF(self, method='baseline', q=0.1, window_len=600, detrend=True, F_neuropil=False, 
-                     save_csv=False, output_filepath=None, output_df=False):
+    def calc_deltaF(self, method='baseline', q=0.1, window_len=600, detrend=True, F_neuropil=False,
+                    save_csv=False, output_filepath=None, output_df=False, use_iscell=True):
         """
         Function to calculate ΔF/F of cells' calcium traces
 
@@ -78,28 +78,32 @@ class Suite2POutput:
 
             detrend (bool; default=True): whether to detrend calcium signal with a median filter
 
-            **F_neuropil (bool; default=False): set to True if calculating ΔF of neuropils
+            F_neuropil (bool; default=False): set to True if calculating ΔF of neuropils
 
             save_csv (bool; default=False): whether to save ΔF/F output as a csv
 
             output_filepath (str or Path-like; default=None): output file name to save dff to csv
 
-            output_df (bool; default=False): whether to output DeltaF calculation result as a pandas df (pd.DataFrame)
+            output_df (bool; default=False): whether to output DeltaF calculation result as a pandas df
+
+            use_iscell (bool; default=True): if True, compute dF/F only for iscell ROIs;
+                if False, compute dF/F for all Suite2p ROIs in original row order.
 
         Returns:
-            deltaF (np.ndarray, pd.DataFrame): array of shape (num_cells, num_frames+1) with delta f of calcium signal OR
-            pd.DataFrame of length num_frames if output_df == True
-            
-            timeEst (1D np.ndarray): estimated times of scope frames from scope_fps
-
+            deltaF (np.ndarray or pd.DataFrame), timeEst (1D np.ndarray)
         """
-        # get raw fluourescence from cells 
-        rawF = self.F[self.cell_indices, :].astype(np.float64)
+        if use_iscell:
+            roi_indices = self.cell_indices
+        else:
+            roi_indices = np.arange(self.F.shape[0])
+
+        rawF = self.F[roi_indices, :].astype(np.float64)
+
         if F_neuropil:
-            neuropil_F = self.Fneu[self.cell_indices, :].astype(np.float64)
+            neuropil_F = self.Fneu[roi_indices, :].astype(np.float64)
             neuropil_coef = float(self.ops_dict.get("neucoeff", 0.7))
-            F_neuropil_corrected = self.F[self.cell_indices, :] - neuropil_coef * neuropil_F
-            rawF = F_neuropil_corrected
+            rawF = rawF - neuropil_coef * neuropil_F
+
         if method == 'median':
             medianF = np.median(rawF, axis=1, keepdims=True)
             deltaF = (rawF - medianF) / medianF
@@ -107,39 +111,36 @@ class Suite2POutput:
             meanF = np.mean(rawF, axis=1, keepdims=True)
             deltaF = (rawF - meanF) / meanF
         elif method == "baseline":
-            # using sliding baseline (10 minutes window)
-            winLen = min(round(window_len * self.scope_fs), rawF.shape[1])  # window size in frames
+            winLen = min(round(window_len * self.scope_fs), rawF.shape[1])
             baseline = np.zeros_like(rawF)
             for i in range(rawF.shape[0]):
-                # Use a 10th percentile moving baseline (approximation using quantile filter)
                 baseline[i, :] = movquant(rawF[i, :], q=q, window=winLen)
             deltaF = (rawF - baseline) / baseline
         else:
             raise ValueError(f"{method} method of computing df/F not recognized")
-        # remove cells with all NaNs (ex. edge artifacts)
+
         valid_cells = ~np.isnan(deltaF).all(axis=1)
         deltaF = deltaF[valid_cells, :]
-        # remove low-frequency trends using median filter
+
         if detrend:
-            trend = median_filter(deltaF, size=(1, window_len))  # apply median filter across time axis
+            trend = median_filter(deltaF, size=(1, window_len))
             deltaF = deltaF - trend
-        # add timing info from num frames and scope fps
+
         num_frames = rawF.shape[1]
         timeEst = np.arange(num_frames) / self.scope_fs
-        ### save to csv if true and output filepath provided
+
         if save_csv and output_filepath is not None:
             if not output_filepath.endswith('.csv'):
                 output_filepath += '.csv'
             np.savetxt(output_filepath, deltaF, delimiter=',')
-        ## output dataframe if output_df = True 
+
         if output_df:
-            if (deltaF.shape[1]) != len(timeEst):
+            if deltaF.shape[1] != len(timeEst):
                 raise ValueError('Timestamps are not the same length as deltaF frames!!')
-                # Create DataFrame with rows: first is time, then deltaF rows
-            all_data = np.vstack([timeEst[np.newaxis, :], deltaF])  # shape: (n_cells+1, n_timepoints)
-            # Create DataFrame
+            all_data = np.vstack([timeEst[np.newaxis, :], deltaF])
             dff_df = pd.DataFrame(all_data)
             return dff_df, timeEst
+
         return deltaF, timeEst
     
     def get_cell_spikes(self, save_to_csv= False, output_filepath= None, output_df= False, df_filepath= None):
@@ -225,7 +226,7 @@ class Suite2POutput:
         #     spike_df.to_csv(destination_path)
         return spike_df            
 
-    def get_good_cells(dff, spikes, threshold=90):
+    def get_good_cells(dff, spikes):
         '''
         Filter cells where there is enough variance and in top 90th percentile 
         
@@ -238,7 +239,7 @@ class Suite2POutput:
         spike_counts = spikes.sum(axis=1)
 
         # variance threshold
-        var_thresh = np.percentile(cell_stds, 100-threshold)
+        var_thresh = np.percentile(cell_stds, 10)
         good_var = cell_stds > var_thresh
 
         # spike thresholds (avoid edge cases)
