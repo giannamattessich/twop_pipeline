@@ -161,6 +161,33 @@ def get_analog_times(analog_signal, fs=20000, lowpassFilter=True, lowPassfilterB
         return None, None
     return start_times, end_times
 
+def clean_camera_triggers(camera_times, camera_times_end):
+        # camera-specific cleanup
+    if camera_times is not None and len(camera_times) > 1:
+        camera_isi = np.diff(camera_times)
+        median_isi = np.median(camera_isi)
+
+        # keep only triggers that are not implausibly close together
+        keep = np.r_[True, camera_isi > 0.5 * median_isi]
+        camera_times = camera_times[keep]
+
+        if camera_times_end is not None and len(camera_times_end) == len(keep):
+            camera_times_end = camera_times_end[keep]
+
+        print(f'After cleanup: {len(camera_times)} camera triggers')
+    return camera_times, camera_times_end
+
+def clean_facemap_data(facemap_data, camera_times, camera_times_end):
+    if facemap_data is not None:
+        facemap_n = len(facemap_data['motion'][1])  # or whichever motion index is canonical
+        if len(camera_times) != facemap_n:
+            print(f'Camera triggers ({len(camera_times)}) do not match FaceMap frames ({facemap_n}).')
+            camera_times = camera_times[:facemap_n]
+            if camera_times_end is not None:
+                camera_times_end = camera_times_end[:facemap_n]
+            print(f'Trimmed camera_times to {len(camera_times)}')
+    return camera_times, camera_times_end
+
 def align_scope_triggers_to_frames(s2p_output, scope_times):
     """
     ERROR CHECKING FUNCTION: ENSURE NUMBER 2P FRAMES AND NUM TRIGGERS ARE SAME LENGTH AND CORRECT

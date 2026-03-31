@@ -25,6 +25,6 @@ def get_fps_from_xml(xml_file):
 def get_camera_fps(camera_times, method='median'):
     '''OPTIONS: method = median or method = total'''
     if method == 'median':
-        return 1 / np.median(np.diff(camera_times))
+        return 1 / np.median(np.diff(camera_times[1:]))
     else:
         return len(camera_times) / (camera_times[-1] - camera_times[0])

@@ -178,7 +178,6 @@ def emg_envelope(emg, fs, lowcut=40, highcut=300, smooth_ms=100):
 def plot_emg_trace_from_lfpchan(basepath, n_channels, ch_idx=0,
                              lfp_fs=1250.0, axs=None, title=None,
                              lowcut=40, highcut=300, smooth_ms=100):
-    from lfp.readLFP import load_lfp_channel
     day = os.path.basename(basepath)
     mat_path = os.path.join(basepath, f"{day}.EMGFromLFP.LFP.mat")
     if not os.path.exists(mat_path):

@@ -1,10 +1,9 @@
 import traceback
 from twop_pipeline.utils.getDataFiles import *
-from twop_pipeline.utils.alignmentFunctions import get_analog_times, align_scope_triggers_to_frames, motion_to_2p_bins, categorical_to_2p
+from twop_pipeline.utils.alignmentFunctions import *
 from twop_pipeline.intan.readIntan import *
 from twop_pipeline.twop.getSuite2POutput import *
 from twop_pipeline.state.getFacemapData import *
-from twop_pipeline.TwoPDataPipeline import *
 
 class TwoPData:
     # PROVIDE ANALOG CHANNELS AS NUM ADC CHANNEL (0-8), NOT ANALOG/AUX TOTAL
@@ -65,11 +64,15 @@ class TwoPData:
             self.pd_times, self.pd_times_end = get_analog_times(self.photodiode_raw, signal_name='photodiode')
         if self.camera_chan is not None:
             self.camera_times, self.camera_times_end = get_analog_times(self.camera_raw, signal_name='camera')
+            self.camera_times, self.camera_times_end = clean_camera_triggers(self.camera_times, self.camera_times_end)
         if self.treadmill_chan is not None:
             self.treadmill_times, self.treadmill_times_end = get_analog_times(self.treadmill_raw, signal_name='treadmill') 
         # read in facemap data
         if self.facemap_path is not None:
             self.facemap_data = get_facemap_data(self.facemap_path)
+            self.camera_times, self.camera_times_end = clean_facemap_data(self.facemap_data,
+                                                                           self.camera_times,
+                                                                             self.camera_times_end)
 
     def make_frame_df(self, output_csv=False, output_filepath=None):
         """
@@ -110,7 +113,7 @@ class TwoPData:
             state_dataframe (pd.DataFrame): dataframe containing camera aligned timestamps, treadmill, motion, and pupil signals
         """
         if cam_fps is None:
-            cam_fps = get_camera_fps(self.camera_times)
+            cam_fps = get_camera_fps(self.camera_times, method='total')
         state_dataframe = get_state_df(facemap_data= self.facemap_data,
                                 camera_times= self.camera_times,
                                  treadmill_signal= self.treadmill_raw,
