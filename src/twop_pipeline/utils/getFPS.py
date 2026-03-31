@@ -2,6 +2,16 @@ import xml.etree.ElementTree as ET
 import os, numpy as np
 
 def get_fps_from_xml(xml_file):
+    """
+    Description of what function does 
+    
+    Parameters:
+        xml_file (str): path of xml filename
+    
+        Output:
+            framerate (float): framerate of scope
+    
+    """
     if not os.path.exists(xml_file):
         raise ValueError('Experiment.XML file not found to get imaging FPS!!!')
     tree = ET.parse(xml_file)

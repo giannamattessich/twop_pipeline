@@ -5,6 +5,7 @@ from scipy.ndimage import gaussian_filter, median_filter
 from utils.stats import movquant
 import matplotlib.ticker as ticker
 from utils.getDataFiles import get2p_foldername_field
+
 class Suite2POutput:
     """
     Class to initialize Suite2P output data for a given plane and perform further analyses after 2p ran
