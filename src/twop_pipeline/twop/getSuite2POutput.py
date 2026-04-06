@@ -250,3 +250,26 @@ class Suite2POutput:
         good_cells = np.where(good_var & good_spike)[0]
         print(f"Good cells: {len(good_cells)} / {n}")
         return good_cells
+    
+def FOV_panel(s2p_outs, days, figsize=(12, 4)):
+    all_images = []
+    all_values = []
+    for s2p_obj in s2p_outs:
+        ops = s2p_obj.ops_dict
+        meanImg = ops.get("meanImg", None)
+        if meanImg is None:
+            meanImg = ops.get("meanImgE", None)
+        if meanImg is None:
+            raise ValueError(f"No meanImg/meanImgE found in ops.npy at {s2p_obj.suite2p_path}")
+        all_values.append(meanImg.ravel())
+        all_images.append(meanImg)
+    all_values = np.concatenate(all_values)
+    vmin = np.percentile(all_values, 5)
+    vmax = np.percentile(all_values, 99)
+    fig, axs = plt.subplots(1, len(s2p_outs), figsize=figsize)
+    for day_idx, day in enumerate(days):
+        axs[day_idx].imshow(all_images[day_idx], cmap="gray", vmin=vmin, vmax=vmax)
+        axs[day_idx].set_title(f"{day}")
+        axs[day_idx].axis('off')
+    plt.tight_layout()
+    plt.show()
